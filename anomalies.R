@@ -47,18 +47,84 @@ anom <- function(i,data) {
 }
 
 
-gadata$`104268639`
+
+anomalies.views <- list()
+
+
+for(j in 1:length(gadata)) {
+  anomalies <- list()
+  view <- names(gadata)[j]
+  view.df <- gadata[[view]]
+  for(i in 2:ncol(view.df) ) {
+    # print(i)
+    # gadata$`104268639`$date <- as.POSIXct(gadata$`104268639`$date, format="%Y-%m-%d")
+    view.df$date <- as.POSIXct(view.df$date, format="%Y-%m-%d")
+    df <- bind_cols(view.df[1], view.df[i])
+    # df <- bind_cols(gadata$`104268639`[1], gadata$`104268639`[i])
+    # df <- bind_cols(gadata$`104268639`[1], gadata$`104268639`[2])
+    print(tail(df))
+    colnames(df)[2]
+    name <- paste(colnames(df)[2],sep='')
+    anomalies[[name]] <- AnomalyDetectionTs(df, max_anoms=0.02, direction='both', plot=T, threshold = 'p95')
+    num_anomalies <- nrow(anomalies[[name]]$anoms)
+    if(num_anomalies > 0L) {
+      anomalies[[name]]$anoms$date <- as.Date(as.character(as.POSIXct(anomalies[[name]]$anoms$timestamp)))
+      anomalies[[name]]$last <- anomalies[[name]]$anoms  %>% 
+        select(date, anoms) %>% 
+        filter(date >= alert_from)
+    } else {
+      anomalies[[name]]$last <- NULL
+    }
+  }
+  anomalies.views[[view]] <- list(data=anomalies)
+}
+names(anomalies.views)
+anomalies.views$`104268639`$data$sessions$plot
+
+anomalies.df <- do.call("rbind",anomalies.views$`104268639`$data$sessions$last)
+anomalies.df
+bind_rows(anomalies.views$`104267653`$sessions$last)
+
+
+
+anomalies.views$`104268639`$sessions$last
+
+anomalies.views$`104267653`$sessions$anoms
+anomalies.views$`104268639`$sessions$plot
+anomalies.views$`132439385`$sessions$plot
+anomalies.views$`96052587`$sessions$plot
+
+
+anomalies.views
+
+
+
+
 anomalies <- list()
 for(i in 2:ncol(gadata$`104268639`) ) {
   # print(i)
-  gadata$`104268639`$date <- as.POSIXct(gadata$`104268639`$date)
+  gadata$`104268639`$date <- as.POSIXct(gadata$`104268639`$date, format="%Y-%m-%d")
   df <- bind_cols(gadata$`104268639`[1], gadata$`104268639`[i])
-  print(head(df))
-  name <- paste('item:',i,sep='')
-  anomalies[[name]] <- AnomalyDetectionTs(df, max_anoms=0.02, direction='both', plot=F, threshold = 'p95')
+  # df <- bind_cols(gadata$`104268639`[1], gadata$`104268639`[2])
+  print(tail(df))
+  colnames(df)[2]
+  name <- paste(colnames(df)[2],sep='')
+  anomalies[[name]] <- AnomalyDetectionTs(df, max_anoms=0.02, direction='both', plot=T, threshold = 'p95')
+  num_anomalies <- nrow(anomalies[[name]]$anoms)
+  if(num_anomalies > 0L) {
+    anomalies[[name]]$anoms$date <- as.Date(as.character(as.POSIXct(anomalies[[name]]$anoms$timestamp)))
+    anomalies[[name]]$last <- anomalies[[name]]$anoms  %>% 
+      select(date, anoms) %>% 
+      filter(date >= alert_from)
+  } else {
+    anomalies[[name]]$last <- NULL
+  }
 }
 
-anomalies$`item:3`
+anomalies$sessions$last
+anomalies$bounceRate$last
+anomalies$bounceRate
+as.Date(anomalies$item2$anoms$timestamp)
 
 foreach(i ncol(gadata$`104268639`))
 cbind(gadata$`104268639`[1],gadata$`104268639`[2])
@@ -75,3 +141,13 @@ AnomalyDetectionTs(res4$site2[,c("date", i)], max_anoms=0.02, direction='both', 
 res <- AnomalyDetectionTs(res4$site2[,c("date", "sessions")], max_anoms=0.02, direction='both', plot=TRUE, threshold = 'p95')
 res$plot
 res$anoms
+
+
+
+library(changepoint)
+m.data=c(rnorm(100,0,1),rnorm(100,1,1),rnorm(100,0,1),rnorm(100,0.2,1))
+ts.plot(m.data,xlab='Index')
+
+m.pelt=cpt.mean(m.data,method='PELT')
+plot(m.pelt,type='l',cpt.col='blue',xlab='Index',cpt.width=4)
+cpts(m.pelt)
