@@ -33,6 +33,15 @@ biplot(features0)
 hdr <- anomaly(features0, n = 1, plot = TRUE, method = "hdr")
 plot(lst1$site2[, hdr$index])
 
+
+library(changepoint)
+m.data=c(rnorm(100,0,1),rnorm(100,1,1),rnorm(100,0,1),rnorm(100,0.2,1))
+ts.plot(m.data,xlab='Index')
+
+# m.pelt=cpt.mean(lst1$`104268639`[,1],method='PELT')
+# plot(m.pelt,type='l',cpt.col='blue',xlab='Index',cpt.width=4)
+# cpts(m.pelt)
+
 library(AnomalyDetection)
 
 res4$site1$date <- as.POSIXct(res4$site1$date)
@@ -49,7 +58,7 @@ anom <- function(i,data) {
 
 
 anomalies.views <- list()
-
+anomalies.df <- data_frame()
 
 for(j in 1:length(gadata)) {
   anomalies <- list()
@@ -69,9 +78,17 @@ for(j in 1:length(gadata)) {
     num_anomalies <- nrow(anomalies[[name]]$anoms)
     if(num_anomalies > 0L) {
       anomalies[[name]]$anoms$date <- as.Date(as.character(as.POSIXct(anomalies[[name]]$anoms$timestamp)))
-      anomalies[[name]]$last <- anomalies[[name]]$anoms  %>% 
+      # anomalies[[name]]$last <- anomalies[[name]]$anoms  %>% 
+      anomalies$last <- anomalies[[name]]$anoms  %>% 
         select(date, anoms) %>% 
-        filter(date >= alert_from)
+        filter(date >= alert_from) %>% 
+        mutate(metric = name, view=view, value = anoms) %>% 
+        select(view, date, metric, value)
+      
+      anomalies.df <- bind_rows(anomalies.df, anomalies$last)
+      anomalies[[name]]$last <- anomalies$last
+        
+      # names(anomalies[[name]]$last)[2] <- name
     } else {
       anomalies[[name]]$last <- NULL
     }
@@ -79,24 +96,13 @@ for(j in 1:length(gadata)) {
   anomalies.views[[view]] <- list(data=anomalies)
 }
 names(anomalies.views)
-anomalies.views$`104268639`$data$sessions$plot
+anomalies.views$`104268639`$data$last
+anomalies.views$`132411798`$data$sessions
+anomalies.views$`132411798`$data$bounceRate
 
-anomalies.df <- do.call("rbind",anomalies.views$`104268639`$data$sessions$last)
 anomalies.df
-bind_rows(anomalies.views$`104267653`$sessions$last)
 
-
-
-anomalies.views$`104268639`$sessions$last
-
-anomalies.views$`104267653`$sessions$anoms
-anomalies.views$`104268639`$sessions$plot
-anomalies.views$`132439385`$sessions$plot
-anomalies.views$`96052587`$sessions$plot
-
-
-anomalies.views
-
+######################
 
 
 

@@ -62,6 +62,17 @@ first_Day <- start.Date(last_Day)
 
 date_range <- c(first_Day ,last_Day)
 
+#NEW
+lastmon <- function(x) x - as.numeric(x-1+4)%%7
+date_to <- Sys.Date() - 1
+date_from <- date_to - 60
+alert_from <- lastmon(Sys.Date()-7)
+alert_from <- date_from
+# date_range <- c(date_from ,date_to)
+
+
+
+
 getGaData4(bounces.ga, ga_id, date_range)
 getGaData4(sessions.ga, ga_id, date_range)
 
@@ -78,7 +89,7 @@ ga_account_list.df <- ga_account_list.df %>% filter(str_detect(viewName, 'Global
 # ga_view_list(accountId = "80796254", webPropertyId = "UA-80796254-1") %>% View()
 
 gadata <- google_analytics(id = ga_account_list.df$viewId, 
-                           start=first_Day, end=last_Day, 
+                           start=date_from, end=date_to, 
                            metrics = c("sessions", "bounceRate"), 
                            dimensions = c("date"))
 names(gadata) <- ga_account_list.df$viewId
